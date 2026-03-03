@@ -45,6 +45,10 @@ cd frontend
 ng serve
 ```
 
-## Author
-Danny Jimenez
-Valeria Cascante
+## Authors
+- Danny Jimenez
+- Valeria Cascante
+- Mishelle
+- Amanda
+
+
