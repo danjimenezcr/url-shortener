@@ -1,0 +1,5 @@
+#Basic Node.js .gitignore file
+/backend/node_modules/
+.env
+
+
