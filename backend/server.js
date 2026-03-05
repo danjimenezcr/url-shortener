@@ -9,7 +9,7 @@ const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Parse JSON bodies
 
-// Routes
+// Route health 
 app.use('/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
