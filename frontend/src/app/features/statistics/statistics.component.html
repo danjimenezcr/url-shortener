@@ -1,0 +1,114 @@
+<div class="statistics-container">
+  <div class="header">
+    <h1>URL Statistics</h1>
+    <button class="back-btn" routerLink="/dashboard">← Back to Dashboard</button>
+  </div>
+
+  <!-- Loading state -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading statistics...</p>
+  </div>
+
+  <!-- Error state -->
+  <div *ngIf="error && !loading" class="error-message">
+    <span class="error-icon">⚠️</span>
+    {{ error }}
+    <button (click)="loadData()" class="retry-btn">Retry</button>
+  </div>
+
+  <!-- Statistics content -->
+  <div *ngIf="!loading && !error && url && statistics" class="stats-content">
+    <!-- URL Info Card -->
+    <div class="card url-info-card">
+      <h2>URL Information</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Original URL:</label>
+          <a [href]="url.originalUrl" target="_blank" rel="noopener noreferrer" class="original-link">
+            {{ url.originalUrl }}
+          </a>
+        </div>
+        <div class="info-item">
+          <label>Short URL:</label>
+          <code class="short-code">{{ getShortUrl(url.shortCode) }}</code>
+        </div>
+        <div class="info-item">
+          <label>Created:</label>
+          <span>{{ formatTimestamp(url.createdAt) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Overview Stats -->
+    <div class="stats-overview">
+      <div class="stat-box">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value">{{ statistics.totalVisits }}</div>
+        <div class="stat-label">Total Visits</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon">📅</div>
+        <div class="stat-value">{{ dailyData.length }}</div>
+        <div class="stat-label">Unique Days</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value">
+          {{ dailyData.length > 0 ? (statistics.totalVisits / dailyData.length).toFixed(1) : 0 }}
+        </div>
+        <div class="stat-label">Avg Per Day</div>
+      </div>
+    </div>
+
+    <!-- Daily Frequency Chart -->
+    <div class="card chart-card" *ngIf="dailyData.length > 0">
+      <h2>Daily Frequency</h2>
+      <div class="chart-container">
+        <div *ngFor="let day of dailyData" class="chart-bar-wrapper">
+          <span class="bar-label">{{ day.date }}</span>
+          <div class="bar-container">
+            <div class="bar" [style.width]="getBarWidth(day.count)">
+              <span class="bar-count">{{ day.count }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No visits message -->
+    <div class="card" *ngIf="statistics.totalVisits === 0">
+      <div class="empty-visits">
+        <div class="empty-icon">📊</div>
+        <h3>No visits yet</h3>
+        <p>Share your shortened URL to start tracking visits!</p>
+        <code class="share-link">{{ getShortUrl(url.shortCode) }}</code>
+      </div>
+    </div>
+
+    <!-- Recent Visits Table -->
+    <div class="card visits-card" *ngIf="statistics.visits && statistics.visits.length > 0">
+      <h2>Recent Visits</h2>
+      <div class="table-responsive">
+        <table class="visits-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>IP Address</th>
+              <th>Timestamp</th>
+              <th>User Agent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let visit of statistics.visits; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td><code>{{ visit.ipAddress }}</code></td>
+              <td>{{ formatTimestamp(visit.timestamp) }}</td>
+              <td class="user-agent">{{ visit.userAgent || 'N/A' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
