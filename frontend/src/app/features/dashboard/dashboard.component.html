@@ -49,21 +49,26 @@
         <div class="short-url-box">
           <code>{{ getShortUrl(url.shortCode) }}</code>
         </div>
+
         <div class="url-actions">
-          <button 
-            (click)="copyToClipboard(url.shortCode)" 
+          <button
+            type="button"
+            (click)="copyToClipboard(url.shortCode)"
             class="action-btn copy-btn"
             [class.copied]="copied === url.shortCode"
           >
             <span *ngIf="copied !== url.shortCode">📋 Copy</span>
             <span *ngIf="copied === url.shortCode">✓ Copied</span>
           </button>
-          <a 
-            [routerLink]="['/statistics', url._id]" 
+
+          <!-- Statistics -->
+          <button
+            type="button"
+            (click)="goToStats(url._id)"
             class="action-btn stats-btn"
           >
             📊 Statistics
-          </a>
+          </button>
         </div>
       </div>
 

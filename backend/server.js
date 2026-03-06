@@ -9,6 +9,10 @@ const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Parse JSON bodies
 
+// API routes
+const urlRoutes = require('./routes/urlRoutes');
+app.use('/api', urlRoutes);
+
 // Route health 
 app.use('/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
@@ -23,6 +27,8 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Failed to connect to MongoDB: ', err));
 
-
+// Redirect routes (short URL)
+const redirectRoutes = require('./routes/redirectRoutes');
+app.use('/', redirectRoutes);
 
 
