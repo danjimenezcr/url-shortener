@@ -1,0 +1,27 @@
+<div class="app-container">
+  <nav class="navbar">
+    <div class="nav-content">
+      <div class="logo">
+        <span class="logo-icon">🔗</span>
+        <h2>{{ title }}</h2>
+      </div>
+      <div class="nav-links">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+          Shorten
+        </a>
+        <a routerLink="/dashboard" routerLinkActive="active">
+          Dashboard
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 URL Shortener - MEAN Stack Project</p>
+    <p class="team">Built by Danny, Valeria, Mishelle & Amanda</p>
+  </footer>
+</div>
