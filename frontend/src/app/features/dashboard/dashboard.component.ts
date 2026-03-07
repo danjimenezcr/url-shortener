@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { UrlService } from '../../core/services/url.service';
 import { Url } from '../../models/url.model';
 import { DomainPipe } from '../../shared/pipes/domain.pipe';
-import { retry } from 'rxjs/operators';
+import { finalize, retry, timeout } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,10 +19,7 @@ export class DashboardComponent implements OnInit {
   error: string | null = null;
   copied: string | null = null;
 
-  constructor(
-    private urlService: UrlService,
-    private router: Router
-  ) {}
+  constructor(private urlService: UrlService) {}
 
   ngOnInit(): void {
     this.loadUrls();
@@ -33,18 +30,22 @@ export class DashboardComponent implements OnInit {
     this.error = null;
 
     this.urlService.getAllUrls().pipe(
-      retry(1) // ✅ reintenta 1 vez si el backend estaba levantando
+      timeout(8000),
+      retry(1),
+      finalize(() => {
+        this.loading = false;
+      })
     ).subscribe({
       next: (urls) => {
-        this.urls = (urls || []).sort((a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-        this.loading = false;
+        this.urls = (urls || []).sort((a, b) => {
+          const dateA = new Date(b.createdAt).getTime();
+          const dateB = new Date(a.createdAt).getTime();
+          return dateA - dateB;
+        });
       },
       error: (err) => {
-        console.error('Failed to load URLs:', err);
         this.error = err?.error?.error || 'Failed to load URLs. Please try again.';
-        this.loading = false;
+        this.urls = [];
       }
     });
   }
@@ -53,8 +54,13 @@ export class DashboardComponent implements OnInit {
     return this.urlService.getShortUrl(shortCode);
   }
 
+  getDisplayShortUrl(url: Url): string {
+    return url.shortUrl || this.getShortUrl(url.shortCode);
+  }
+
   copyToClipboard(shortCode: string): void {
-    const url = this.getShortUrl(shortCode);
+    const urlData = this.urls.find(item => item.shortCode === shortCode);
+    const url = urlData ? this.getDisplayShortUrl(urlData) : this.getShortUrl(shortCode);
     navigator.clipboard.writeText(url).then(() => {
       this.copied = shortCode;
       setTimeout(() => {
@@ -65,7 +71,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  formatDate(date: Date): string {
+  formatDate(date: string | Date): string {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -73,9 +79,5 @@ export class DashboardComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
-  }
-
-  goToStats(id: string): void {
-    this.router.navigate(['/statistics', id]);
   }
 }

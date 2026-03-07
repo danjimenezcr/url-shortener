@@ -2,9 +2,10 @@ export interface Url {
   _id: string;
   originalUrl: string;
   shortCode: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt?: string;
   clickCount: number;
+  shortUrl?: string;
 }
 
 export interface CreateUrlRequest {
@@ -12,7 +13,10 @@ export interface CreateUrlRequest {
 }
 
 export interface CreateUrlResponse {
+  _id: string;
   shortCode: string;
   originalUrl: string;
-  createdAt: Date;
+  clickCount: number;
+  createdAt: string;
+  shortUrl: string;
 }

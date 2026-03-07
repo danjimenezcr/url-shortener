@@ -47,7 +47,7 @@
 
       <div class="url-short">
         <div class="short-url-box">
-          <code>{{ getShortUrl(url.shortCode) }}</code>
+          <code>{{ getDisplayShortUrl(url) }}</code>
         </div>
 
         <div class="url-actions">
@@ -64,7 +64,7 @@
           <!-- Statistics -->
           <button
             type="button"
-            (click)="goToStats(url._id)"
+            [routerLink]="['/statistics', url._id]"
             class="action-btn stats-btn"
           >
             📊 Statistics

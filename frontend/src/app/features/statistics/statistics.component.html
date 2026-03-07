@@ -31,7 +31,7 @@
         </div>
         <div class="info-item">
           <label>Short URL:</label>
-          <code class="short-code">{{ getShortUrl(url.shortCode) }}</code>
+          <code class="short-code">{{ getDisplayShortUrl(url) }}</code>
         </div>
         <div class="info-item">
           <label>Created:</label>
@@ -76,13 +76,23 @@
       </div>
     </div>
 
+    <div class="card" *ngIf="statistics.countries && statistics.countries.length > 0">
+      <h2>Countries</h2>
+      <div class="countries-list">
+        <div class="country-row" *ngFor="let item of statistics.countries">
+          <span class="country-name">{{ item.country }}</span>
+          <span class="country-count">{{ item.count }}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- No visits message -->
     <div class="card" *ngIf="statistics.totalVisits === 0">
       <div class="empty-visits">
         <div class="empty-icon">📊</div>
         <h3>No visits yet</h3>
         <p>Share your shortened URL to start tracking visits!</p>
-        <code class="share-link">{{ getShortUrl(url.shortCode) }}</code>
+        <code class="share-link">{{ getDisplayShortUrl(url) }}</code>
       </div>
     </div>
 

@@ -8,7 +8,7 @@ import { UrlStatistics } from '../../models/visit.model';
   providedIn: 'root'
 })
 export class UrlService {
-  private apiUrl = 'http://localhost:3000/api';
+  private apiUrl = 'http://127.0.0.1:3000/api';
 
   constructor(private http: HttpClient) { }
 
@@ -44,6 +44,6 @@ export class UrlService {
    * Build the full shortened URL for display
    */
   getShortUrl(shortCode: string): string {
-    return `http://localhost:3000/${shortCode}`;
+    return `http://127.0.0.1:3000/${shortCode}`;
   }
 }

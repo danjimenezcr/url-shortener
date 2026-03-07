@@ -1,34 +1,32 @@
-const express = require('express'); // Web framework for Node.js
-const mongoose = require('mongoose'); // MongoDB object modeling tool
-const cors = require('cors'); // Middleware to enable Cross-Origin Resource Sharing (CORS)
-require('dotenv').config(); // Load environment variables from .env file
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+require('dotenv').config();
 
 const app = express();
 
 // Middleware
-app.use(cors()); // Enable CORS for all routes
-app.use(express.json()); // Parse JSON bodies
+app.use(cors());
+app.use(express.json());
 
-// API routes
-const urlRoutes = require('./routes/urlRoutes');
-app.use('/api', urlRoutes);
-
-// Route health 
-app.use('/health', (req, res) => {
-  res.status(200).json({ status: 'OK' });
-});
-
-// Testing Listen Application
-const PORT = process.env.PORT;
-app.listen(PORT, () => (console.log(`Server running on port ${PORT}`)));
-
-// Connect to MongoDB and start the server
+// Connect to MongoDB FIRST
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('Failed to connect to MongoDB: ', err));
 
-// Redirect routes (short URL)
+// Health check (specific route first)
+app.use('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
+
+// API routes (specific prefix before catch-all)
+const urlRoutes = require('./routes/urlRoutes');
+app.use('/api', urlRoutes);
+
+// Redirect routes (catch-all LAST)
 const redirectRoutes = require('./routes/redirectRoutes');
 app.use('/', redirectRoutes);
 
-
+// Start server
+const PORT = process.env.PORT;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -4,8 +4,8 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { UrlService } from '../../core/services/url.service';
 import { Url } from '../../models/url.model';
 import { UrlStatistics } from '../../models/visit.model';
-import { forkJoin, Subject, EMPTY } from 'rxjs';
-import { catchError, filter, finalize, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { forkJoin, Subject } from 'rxjs';
+import { finalize, takeUntil, timeout } from 'rxjs/operators';
 
 @Component({
   selector: 'app-statistics',
@@ -33,43 +33,16 @@ export class StatisticsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.route.paramMap.pipe(
-      map(params => params.get('id') || ''),
-      tap(id => {
-        this.urlId = id;
-        this.loading = true;
-        this.error = null;
-        this.url = null;
-        this.statistics = null;
-        this.dailyData = [];
-      }),
-      filter(id => {
-        if (!id) {
-          this.error = 'Invalid URL ID';
-          this.loading = false;
-          return false;
-        }
-        return true;
-      }),
-      switchMap(id =>
-        forkJoin({
-          url: this.urlService.getUrlById(id),
-          stats: this.urlService.getUrlStatistics(id),
-        }).pipe(
-          catchError(err => {
-            this.error = err?.error?.error || 'Failed to load statistics. Please try again.';
-            return EMPTY; // evita que crashee y deja que finalize apague loading
-          }),
-          finalize(() => {
-            this.loading = false; 
-          })
-        )
-      ),
       takeUntil(this.destroy$)
-    ).subscribe(result => {
-      if (!result) return; // EMPTY llega aquí como undefined
-      this.url = result.url;
-      this.statistics = result.stats;
-      this.processDailyData();
+    ).subscribe(params => {
+      this.urlId = params.get('id') || '';
+
+      if (this.urlId) {
+        this.loadData();
+      } else {
+        this.error = 'Invalid URL ID';
+        this.loading = false;
+      }
     });
   }
 
@@ -78,33 +51,34 @@ export class StatisticsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-loadData(): void {
-  if (!this.urlId) {
-    this.error = 'Invalid URL ID';
-    this.loading = false;
-    return;
-  }
-
-  this.loading = true;
-  this.error = null;
-
-  forkJoin({
-    url: this.urlService.getUrlById(this.urlId),
-    stats: this.urlService.getUrlStatistics(this.urlId),
-  }).subscribe({
-    next: ({ url, stats }) => {
-      this.url = url;
-      this.statistics = stats;
-      this.processDailyData();
+  loadData(): void {
+    if (!this.urlId) {
+      this.error = 'Invalid URL ID';
       this.loading = false;
-    },
-    error: (err) => {
-      console.error('Statistics load error:', err);
-      this.error = err?.error?.error || 'Failed to load statistics. Please try again.';
-      this.loading = false;
+      return;
     }
-  });
-}
+
+    this.loading = true;
+    this.error = null;
+
+    forkJoin({
+      url: this.urlService.getUrlById(this.urlId).pipe(timeout(8000)),
+      stats: this.urlService.getUrlStatistics(this.urlId).pipe(timeout(8000)),
+    }).pipe(
+      finalize(() => {
+        this.loading = false;
+      })
+    ).subscribe({
+      next: ({ url, stats }) => {
+        this.url = url;
+        this.statistics = stats;
+        this.processDailyData();
+      },
+      error: (err) => {
+        this.error = err?.error?.error || 'Failed to load statistics. Please try again.';
+      }
+    });
+  }
 
   processDailyData(): void {
     if (!this.statistics?.visits?.length) {
@@ -129,6 +103,10 @@ loadData(): void {
 
   getShortUrl(shortCode: string): string {
     return this.urlService.getShortUrl(shortCode);
+  }
+
+  getDisplayShortUrl(url: Url): string {
+    return url.shortUrl || this.getShortUrl(url.shortCode);
   }
 
   formatTimestamp(timestamp: string | Date): string {
