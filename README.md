@@ -48,7 +48,7 @@ ng serve
 ## Authors
 - Danny Jimenez
 - Valeria Cascante
-- Mishelle
-- Amanda
+- Michelle Orellana
+- Amanda Montero
 
 

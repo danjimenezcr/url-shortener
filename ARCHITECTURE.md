@@ -1,7 +1,7 @@
 # URL Shortener Application - Software Architecture & Implementation Plan
 
 **Course:** Web Design  
-**Team:** Danny Jimenez, Valeria Cascante, Mishelle, Amanda  
+**Team:** Danny Jimenez, Valeria Cascante, Michelle Orellana, Amanda Montero
 **Deadline:** Next Friday  
 **Technology Stack:** MEAN (MongoDB, Express, Angular, Node.js)  
 **Deployment:** Oracle Cloud VM (SSH access)
