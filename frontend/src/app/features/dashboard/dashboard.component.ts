@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { UrlService } from '../../core/services/url.service';
@@ -19,7 +19,10 @@ export class DashboardComponent implements OnInit {
   error: string | null = null;
   copied: string | null = null;
 
-  constructor(private urlService: UrlService) {}
+  constructor(
+    private urlService: UrlService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.loadUrls();
@@ -34,18 +37,24 @@ export class DashboardComponent implements OnInit {
       retry(1),
       finalize(() => {
         this.loading = false;
+        this.cdr.detectChanges();
       })
     ).subscribe({
       next: (urls) => {
-        this.urls = (urls || []).sort((a, b) => {
-          const dateA = new Date(b.createdAt).getTime();
-          const dateB = new Date(a.createdAt).getTime();
-          return dateA - dateB;
-        });
+        this.urls = Array.isArray(urls)
+          ? urls.sort((a, b) => {
+              const dateA = new Date(b.createdAt).getTime();
+              const dateB = new Date(a.createdAt).getTime();
+              return dateA - dateB;
+            })
+          : [];
+
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.error = err?.error?.error || 'Failed to load URLs. Please try again.';
         this.urls = [];
+        this.cdr.detectChanges();
       }
     });
   }
@@ -61,10 +70,12 @@ export class DashboardComponent implements OnInit {
   copyToClipboard(shortCode: string): void {
     const urlData = this.urls.find(item => item.shortCode === shortCode);
     const url = urlData ? this.getDisplayShortUrl(urlData) : this.getShortUrl(shortCode);
+
     navigator.clipboard.writeText(url).then(() => {
       this.copied = shortCode;
       setTimeout(() => {
         this.copied = null;
+        this.cdr.detectChanges();
       }, 2000);
     }).catch((err) => {
       console.error('Failed to copy:', err);

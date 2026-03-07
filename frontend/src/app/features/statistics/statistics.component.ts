@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { UrlService } from '../../core/services/url.service';
@@ -26,10 +26,11 @@ export class StatisticsComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(
-    private route: ActivatedRoute,
-    private urlService: UrlService
-  ) {}
+constructor(
+  private route: ActivatedRoute,
+  private urlService: UrlService,
+  private cdr: ChangeDetectorRef
+) {}
 
   ngOnInit(): void {
     this.route.paramMap.pipe(
@@ -51,34 +52,58 @@ export class StatisticsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadData(): void {
-    if (!this.urlId) {
-      this.error = 'Invalid URL ID';
-      this.loading = false;
-      return;
-    }
-
-    this.loading = true;
-    this.error = null;
-
-    forkJoin({
-      url: this.urlService.getUrlById(this.urlId).pipe(timeout(8000)),
-      stats: this.urlService.getUrlStatistics(this.urlId).pipe(timeout(8000)),
-    }).pipe(
-      finalize(() => {
-        this.loading = false;
-      })
-    ).subscribe({
-      next: ({ url, stats }) => {
-        this.url = url;
-        this.statistics = stats;
-        this.processDailyData();
-      },
-      error: (err) => {
-        this.error = err?.error?.error || 'Failed to load statistics. Please try again.';
-      }
-    });
+loadData(): void {
+  if (!this.urlId) {
+    this.error = 'Invalid URL ID';
+    this.loading = false;
+    this.cdr.detectChanges();
+    return;
   }
+
+  this.loading = true;
+  this.error = null;
+
+  console.log('STATS 1. loadData iniciado con id:', this.urlId);
+  console.log('STATS 2. loading antes de forkJoin:', this.loading);
+
+  forkJoin({
+    url: this.urlService.getUrlById(this.urlId).pipe(timeout(8000)),
+    stats: this.urlService.getUrlStatistics(this.urlId).pipe(timeout(8000)),
+  }).pipe(
+    finalize(() => {
+      console.log('STATS 7. finalize ejecutado');
+      this.loading = false;
+      console.log('STATS 8. loading despues de finalize:', this.loading);
+      this.cdr.detectChanges();
+    })
+  ).subscribe({
+    next: ({ url, stats }) => {
+      console.log('STATS 3. next ejecutado');
+      console.log('STATS 4. url recibida:', url);
+      console.log('STATS 5. stats recibidas:', stats);
+
+      this.url = url;
+      this.statistics = stats;
+      this.processDailyData();
+
+      console.log('STATS 6. estado final:', {
+        hasUrl: !!this.url,
+        hasStatistics: !!this.statistics,
+        dailyDataLength: this.dailyData.length
+      });
+
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('STATS ERROR:', err);
+      this.error = err?.error?.error || 'Failed to load statistics. Please try again.';
+      this.url = null;
+      this.statistics = null;
+      this.dailyData = [];
+      this.cdr.detectChanges();
+    }
+  });
+}
 
   processDailyData(): void {
     if (!this.statistics?.visits?.length) {
